@@ -35,13 +35,16 @@ func randomSlice(len, max int) (res []int) {
 }
 
 func getProductsOfAllIntsExceptAtIndex(a []int) (res []int) {
-	// First we run through the input and create a data structure that holds the product of all values up to that index, one for each direction
+	// First we run through the input and create a data structure that holds
+	// the product of all values up to that index, one for each direction
 	products := make([]int, len(a))
 	products[0] = 1
 
 	currentProduct := 1
 
-	// In the following loops we compute the result values by greedily finding the product of all values up to and not including the value at the current index in both directions, and multiplying these values together
+	// In the following loops we compute the result values by greedily finding
+	// the product of all values up to and not including the value at the
+	// current index in both directions, and multiplying these values together
 	for i := 0; i < len(a); i++ {
 		products[i] = currentProduct
 		currentProduct *= a[i]
