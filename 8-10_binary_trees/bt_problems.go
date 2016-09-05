@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/dasizeman/binarytree"
+	"github.com/dasizeman/tools"
 	"math"
 )
 
@@ -25,45 +26,95 @@ func main() {
 	validBST.Right.InsertLeft(70)
 	validBST.Right.InsertRight(90)
 
-	fmt.Printf("Valid: %t\n", isBinaryTreeValid(validBST))
+	// Problem 8 "superbalanced"
+	//------------------------------
+	//validBST.Right.Right.InsertRight(100)
+	validBST.Left.Left.InsertLeft(10)
+	fmt.Printf("Valid: %t\n", isBinarySearchTreeValid(validBST))
+	fmt.Printf("Superbalanced: %t\n", isBinaryTreeSuperBalanced(validBST))
 
 }
 
-func isBinaryTreeValid(tree *binarytree.Node) bool {
+func isBinarySearchTreeValid(tree *binarytree.Node) bool {
 	// We will implement a slightly modified depth-first
 	// search, keeping track of the acceptable bounds for
 	// BST values as we go
 
-	nodeStack := &Stack{}
-	maxMinStack := &Stack{}
+	type NodeInfo struct {
+		ptr      *binarytree.Node
+		min, max int
+	}
 
-	nodeStack.push(tree)
-	maxMinStack.push(MaxMinPair{math.MinInt64, math.MaxInt64})
+	nodeStack := &Stack{}
+
+	nodeStack.push(NodeInfo{tree, math.MinInt64, math.MaxInt64})
 
 	for !nodeStack.isEmpty() {
-		node := nodeStack.pop().(*binarytree.Node)
-		maxMin := maxMinStack.pop().(MaxMinPair)
-		//fmt.Printf("%d\n", node.Data.(int))
-		//fmt.Printf("%d,%d\n", maxMin.min, maxMin.max)
+		node := nodeStack.pop().(NodeInfo)
 
-		if node.Data.(int) < maxMin.min {
+		if node.ptr.Data.(int) < node.min {
 			return false
 		}
-		if node.Data.(int) > maxMin.max {
+		if node.ptr.Data.(int) > node.max {
 			return false
 		}
 
-		if node.Left != nil {
-			nodeStack.push(node.Left)
-			maxMinStack.push(MaxMinPair{maxMin.min, node.Data.(int)})
+		if node.ptr.Left != nil {
+			nodeStack.push(NodeInfo{node.ptr.Left, node.min,
+				node.ptr.Data.(int)})
 		}
-		if node.Right != nil {
-			nodeStack.push(node.Right)
-			maxMinStack.push(MaxMinPair{node.Data.(int), maxMin.max})
+		if node.ptr.Right != nil {
+			nodeStack.push(NodeInfo{node.ptr.Right, node.ptr.Data.(int),
+				node.max})
 		}
+
 	}
 
 	return true
+}
+
+// Note from interviewcake solution:
+// We could short circuit and not have to traverse the whole tree,
+// if we added an additional condition: never more than 2 unique
+// depths, and checked both conditions at every iteration
+func isBinaryTreeSuperBalanced(tree *binarytree.Node) bool {
+	// Again we will do a DFS, keeping track of the max and min
+	// heights of all leaves.  If max-min > 1, the tree is not superbalanced
+
+	nodeStack := &Stack{}
+	min := math.MaxInt64
+	max := math.MinInt64
+
+	// Quick local struct because no tuples in golang :(
+	type Node struct {
+		ptr   *binarytree.Node
+		depth int
+	}
+
+	nodeStack.push(Node{tree, 0})
+
+	for !nodeStack.isEmpty() {
+		node := nodeStack.pop().(Node)
+
+		if node.ptr.Left != nil {
+			nodeStack.push(Node{node.ptr.Left, node.depth + 1})
+		}
+		if node.ptr.Right != nil {
+			nodeStack.push(Node{node.ptr.Right, node.depth + 1})
+		}
+
+		// We only care about leaf nodes
+		if !(node.ptr.Left == nil &&
+			node.ptr.Right == nil) {
+			continue
+		}
+
+		max = tools.IntMax(max, node.depth)
+		min = tools.IntMin(min, node.depth)
+
+	}
+
+	return (max - min) <= 1
 }
 
 // Simple "generic" stack
@@ -99,10 +150,6 @@ func (stack *Stack) isEmpty() bool {
 	return stack.topIdx <= 0
 }
 
-// Max/min pair
-// -----------------------------------------------
-
-// MaxMinPair stores a max and min float value
-type MaxMinPair struct {
-	min, max int
+func (stack *Stack) height() int {
+	return stack.topIdx
 }
