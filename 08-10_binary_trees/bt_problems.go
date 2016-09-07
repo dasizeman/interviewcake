@@ -28,10 +28,11 @@ func main() {
 
 	// Problem 8 "superbalanced"
 	//------------------------------
-	//validBST.Right.Right.InsertRight(100)
+	validBST.Right.Right.InsertLeft(85)
 	validBST.Left.Left.InsertLeft(10)
 	fmt.Printf("Valid: %t\n", isBinarySearchTreeValid(validBST))
 	fmt.Printf("Superbalanced: %t\n", isBinaryTreeSuperBalanced(validBST))
+	fmt.Printf("Second largest: %d\n", secondLargestItemInBST(validBST).(int))
 
 }
 
@@ -115,6 +116,25 @@ func isBinaryTreeSuperBalanced(tree *binarytree.Node) bool {
 	}
 
 	return (max - min) <= 1
+}
+
+func secondLargestItemInBST(tree *binarytree.Node) interface{} {
+	searchNode := tree
+	for searchNode.Right.Right != nil {
+		searchNode = searchNode.Right
+	}
+
+	if searchNode.Right.Left == nil {
+		return searchNode.Data
+	}
+
+	searchNode = searchNode.Right.Left
+
+	for searchNode.Right != nil {
+		searchNode = searchNode.Right
+	}
+
+	return searchNode.Data
 }
 
 // Simple "generic" stack
