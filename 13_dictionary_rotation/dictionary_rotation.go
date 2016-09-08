@@ -15,6 +15,8 @@ const (
 	NumberTestCases      int    = 3
 )
 
+// There is a lot of extra functionality in this file to rotate arbitrary
+// dictionary files that I am aware is not being used
 func main() {
 
 	// Generate a few rotations of the sample data for testing
@@ -31,11 +33,73 @@ func main() {
 		testCase, _ := tools.ReadFileToStrings(RotatedWordsFilename)
 		testCases = append(testCases, testCase)
 
-		fmt.Printf("%v\n", testCase)
+	}
+
+	controlCase := []string{
+		"asymptote",
+		"babka",
+		"banoffee",
+		"engender",
+		"karpatka",
+		"othellolagkage",
+		"ptolemaic",
+		"retrograde",
+		"supplant",
+		"undulate",
+		"xenoepist"}
+
+	testCases = append(testCases, controlCase)
+
+	for _, list := range testCases {
+		idx := findRotationIndex(list)
+		fmt.Printf("%v\nRotation index: %d\n", list, idx)
 	}
 }
 
-func findRotationIndex(words []string) int {}
+func findRotationIndex(words []string) int {
+
+	if len(words) <= 1 {
+		return -1
+	}
+
+	leftBoundary := -1
+	rightBoundary := len(words)
+
+	for leftBoundary+1 < rightBoundary {
+		searchIdx := leftBoundary + (rightBoundary-leftBoundary)/2
+
+		// Check if this item is the rotation index by checking if the item
+		// before it comes after it alphabetically
+		if words[searchIdx-1] > words[searchIdx] {
+			return searchIdx
+		}
+
+		// The rotation index is in the right half of the search region
+		// if the word at the right boundary comes before this word
+		// alphabetically
+		indexInRightHalf := words[rightBoundary-1] < words[searchIdx]
+
+		// The rotation index is in the left half of the search region if
+		// the word at the left boundary comes after this word alphabetically
+		indexInLeftHalf := words[leftBoundary+1] > words[searchIdx]
+
+		// If both or neither of these are true then either the word list
+		// is not rotated or it is not sorted alphabetically
+		if (indexInLeftHalf && indexInRightHalf) ||
+			(!indexInLeftHalf && !indexInRightHalf) {
+			return -1
+		}
+
+		if indexInLeftHalf {
+			rightBoundary = searchIdx
+		} else {
+			leftBoundary = searchIdx
+		}
+	}
+
+	return -1
+
+}
 
 func tryRotateFile(inPath, outPath string) (bool, int) {
 	// Open our files and create scanners
