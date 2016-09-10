@@ -25,78 +25,28 @@ func main() {
 
 func maxDuffelBagValue(cakeTypes []CakeStat, bagCapacity int) int {
 
-	// How much weight we have yet to fill
-	remainingWeight := bagCapacity
+	maxValuesAtCapacities := make([]int, bagCapacity+1)
 
-	// The maximum value of our bag
-	maxBagValue := 0
+	for capacity := range maxValuesAtCapacities {
 
-	// A convenient way to keep track of which cake types have
-	// been "used" so we don't have to modify the list
-	used := make(map[int]bool)
+		maxValueAtCapacity := 0
 
-	bagFull := false
-
-	for !bagFull {
-		// The index of the cake type that we can currently gain the most value
-		// from
-		bestValueIdx := 0
-
-		// How much value we gain by filling our bag with the maximum amount of
-		// the aformentioned cake type
-		maxValueAdded := 0
-
-		// How many cakes we have just added
-		maxNumCakesAdded := 0
-
-		// Find the most value we can get from an unused type of cake
-		for idx, cake := range cakeTypes {
-			// If we have already used this cake type, skip it
-			_, isUsed := used[idx]
-			if isUsed {
-				continue
-			}
-
-			// If this cake has zero value, it isn't useful
-			if cake.value == 0 {
-				used[idx] = true
-				continue
-			}
-
-			// If we have a cake with nonzero value but zero weight, our maximum
-			// bag value is infinite
-			if cake.weight == 0 {
+		for _, cake := range cakeTypes {
+			if cake.weight == 0 && cake.value > 0 {
 				return math.MaxInt32
 			}
 
-			// If the weight of this cake is higher than our remaining bag
-			// weight, we can't use it
-			if cake.weight > remainingWeight {
-				used[idx] = true
+			if cake.weight > capacity {
 				continue
 			}
 
-			// What is the max value we can add with this cake type?
-			numCakesPossible := (remainingWeight / cake.weight)
-			possibleValueAdded := numCakesPossible * cake.value
-			if possibleValueAdded > maxValueAdded {
-				bestValueIdx = idx
-				maxValueAdded = possibleValueAdded
-				maxNumCakesAdded = numCakesPossible
+			value := cake.value + maxValuesAtCapacities[capacity-cake.weight]
+			if value > maxValueAtCapacity {
+				maxValueAtCapacity = value
 			}
 		}
 
-		// If we can't further increase the bag value, we're done
-		if maxValueAdded == 0 {
-			bagFull = true
-			break
-		}
-
-		// "Add the cakes to our bag"
-		remainingWeight -= cakeTypes[bestValueIdx].weight * maxNumCakesAdded
-		maxBagValue += maxValueAdded
-		used[bestValueIdx] = true
+		maxValuesAtCapacities[capacity] = maxValueAtCapacity
 	}
-
-	return maxBagValue
+	return maxValuesAtCapacities[bagCapacity]
 }
